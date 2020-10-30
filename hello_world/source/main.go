@@ -5,19 +5,19 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 )
 
+var appVersion = `1.0`
 var buildDateVersionLinkerFlag string
 var buildCommitLinkerFlag string
 var processStartTime = time.Now()
 
 type appMetaData struct {
+	version          string
 	buildGitCommit   string
 	buildDateVersion string
 	hostname         string
-	processID        int
 	processStartTime time.Time
 	currentTimestamp time.Time
 }
@@ -33,10 +33,10 @@ func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 	}
 
 	healthCheckMetaData := appMetaData{
+		version:          appVersion,
 		buildGitCommit:   buildCommitLinkerFlag,
 		buildDateVersion: buildDateVersionLinkerFlag,
 		hostname:         hostname,
-		processID:        os.Getpid(),
 		processStartTime: processStartTime,
 		currentTimestamp: time.Now(),
 	}
@@ -45,10 +45,10 @@ func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 	// bytes, _ := json.Marshal(healthCheckData)
 	// fmt.Fprintln(w, string(bytes))
 
-	fmt.Fprintln(w, "hostname: "+healthCheckMetaData.hostname)
-	fmt.Fprintln(w, "build date: "+healthCheckMetaData.buildDateVersion)
+	fmt.Fprintln(w, "version: "+healthCheckMetaData.version)
 	fmt.Fprintln(w, "git commit: "+healthCheckMetaData.buildGitCommit)
-	fmt.Fprintln(w, "process id: "+strconv.Itoa(healthCheckMetaData.processID))
+	fmt.Fprintln(w, "build date: "+healthCheckMetaData.buildDateVersion)
+	fmt.Fprintln(w, "hostname: "+healthCheckMetaData.hostname)
 	fmt.Fprintln(w, "process start time: "+healthCheckMetaData.processStartTime.String())
 	fmt.Fprintln(w, "request time: "+healthCheckMetaData.currentTimestamp.String())
 }
