@@ -1,11 +1,10 @@
-FROM golang:1.14-alpine AS build
+FROM registry.hub.docker.com/library/golang:alpine AS build
 
 WORKDIR /src/
 COPY ./source /src/
-RUN CGO_ENABLED=0 go build -o /bin/app
+ARG GIT_CURRENT_COMMIT_HASH
+RUN CGO_ENABLED=0 go build -ldflags "-X main.gitCommitHash=$GIT_CURRENT_COMMIT_HASH" -o /bin/app
 
 FROM scratch
-ENV PORT 8080
 COPY --from=build /bin/app /bin/app
 ENTRYPOINT ["/bin/app"]
-EXPOSE 8080
