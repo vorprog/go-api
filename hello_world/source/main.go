@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var buildDateLinkerFlag string
+var buildDateVersionLinkerFlag string
 var buildCommitLinkerFlag string
 var processStartTime = time.Now()
 
@@ -34,7 +34,7 @@ func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 
 	healthCheckMetaData := appMetaData{
 		buildGitCommit:   buildCommitLinkerFlag,
-		buildDateVersion: buildDateLinkerFlag,
+		buildDateVersion: buildDateVersionLinkerFlag,
 		hostname:         hostname,
 		processID:        os.Getpid(),
 		processStartTime: processStartTime,
