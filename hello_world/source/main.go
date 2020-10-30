@@ -9,15 +9,17 @@ import (
 	"time"
 )
 
-var gitCommitHash string
+var compiledGitCommitHash string
+var compiledGitCommitTimestamp string
 var processStartTime = time.Now()
 
 type appMetaData struct {
-	gitCommit        string
-	hostname         string
-	processID        int
-	processStartTime time.Time
-	currentTimestamp time.Time
+	gitCommitHash      string
+	gitCommitTimestamp string
+	hostname           string
+	processID          int
+	processStartTime   time.Time
+	currentTimestamp   time.Time
 }
 
 func rootPathHandler(w http.ResponseWriter, r *http.Request) {
@@ -25,14 +27,18 @@ func rootPathHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func healthCheckHander(w http.ResponseWriter, r *http.Request) {
-	hostname, _ := os.Hostname()
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	healthCheckMetaData := appMetaData{
-		gitCommit:        gitCommitHash,
-		hostname:         hostname,
-		processID:        os.Getpid(),
-		processStartTime: processStartTime,
-		currentTimestamp: time.Now(),
+		gitCommitHash:      compiledGitCommitHash,
+		gitCommitTimestamp: compiledGitCommitTimestamp,
+		hostname:           hostname,
+		processID:          os.Getpid(),
+		processStartTime:   processStartTime,
+		currentTimestamp:   time.Now(),
 	}
 
 	// TODO: fix json marshalling
@@ -40,7 +46,7 @@ func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintln(w, string(bytes))
 
 	fmt.Fprintln(w, "hostname: "+healthCheckMetaData.hostname)
-	fmt.Fprintln(w, "git commit: "+healthCheckMetaData.gitCommit)
+	fmt.Fprintln(w, "git commit: "+healthCheckMetaData.gitCommitHash)
 	fmt.Fprintln(w, "process id: "+strconv.Itoa(healthCheckMetaData.processID))
 	fmt.Fprintln(w, "process start time: "+healthCheckMetaData.processStartTime.String())
 	fmt.Fprintln(w, "request time: "+healthCheckMetaData.currentTimestamp.String())
@@ -49,7 +55,9 @@ func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/", rootPathHandler)
 	http.HandleFunc("/healthcheck", healthCheckHander)
-	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+
+	port := ":" + os.Getenv("PORT")
+	err := http.ListenAndServe(port, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
