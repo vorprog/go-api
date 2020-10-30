@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-set -x
+set -xe
 
 docker pull registry.hub.docker.com/library/golang:alpine 
 
 GIT_CURRENT_COMMIT_HASH=$(git rev-parse HEAD)
-GIT_CURRENT_COMMIT_TIMESTAMP=$(git show -s --format=%ci HEAD)
+CURRENT_DATE_VERSION=$(date +'%Y.%m.%d.%H.%M.%S')
 docker build \
---build-arg GIT_COMMIT_HASH=${GIT_CURRENT_COMMIT_HASH} \
---build-arg GIT_COMMIT_TIMESTAMP=${GIT_CURRENT_COMMIT_TIMESTAMP} \
---quiet \
+--build-arg BUILD_COMMIT=${GIT_CURRENT_COMMIT_HASH} \
 --tag hello_world_go:latest .
 
 export PORT=8080
