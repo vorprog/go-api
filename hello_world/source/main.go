@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,12 +15,12 @@ var buildCommitLinkerFlag string
 var processStartTime = time.Now()
 
 type appMetaData struct {
-	version          string
-	buildGitCommit   string
-	buildDateVersion string
-	hostname         string
-	processStartTime time.Time
-	currentTimestamp time.Time
+	Version          string    `json:"Version"`
+	BuildGitCommit   string    `json:"BuildGitCommit"`
+	BuildDateVersion string    `json:"BuildDateVersion"`
+	Hostname         string    `json:"Hostname"`
+	ProcessStartTime time.Time `json:"ProcessStartTime"`
+	CurrentTimestamp time.Time `json:"CurrentTimestamp"`
 }
 
 func rootPathHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,24 +34,16 @@ func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 	}
 
 	healthCheckMetaData := appMetaData{
-		version:          appVersion,
-		buildGitCommit:   buildCommitLinkerFlag,
-		buildDateVersion: buildDateVersionLinkerFlag,
-		hostname:         hostname,
-		processStartTime: processStartTime,
-		currentTimestamp: time.Now(),
+		Version:          appVersion,
+		BuildGitCommit:   buildCommitLinkerFlag,
+		BuildDateVersion: buildDateVersionLinkerFlag,
+		Hostname:         hostname,
+		ProcessStartTime: processStartTime,
+		CurrentTimestamp: time.Now(),
 	}
 
-	// TODO: fix json marshalling
-	// bytes, _ := json.Marshal(healthCheckData)
-	// fmt.Fprintln(w, string(bytes))
-
-	fmt.Fprintln(w, "version: "+healthCheckMetaData.version)
-	fmt.Fprintln(w, "git commit: "+healthCheckMetaData.buildGitCommit)
-	fmt.Fprintln(w, "build date: "+healthCheckMetaData.buildDateVersion)
-	fmt.Fprintln(w, "hostname: "+healthCheckMetaData.hostname)
-	fmt.Fprintln(w, "process start time: "+healthCheckMetaData.processStartTime.String())
-	fmt.Fprintln(w, "request time: "+healthCheckMetaData.currentTimestamp.String())
+	bytes, _ := json.MarshalIndent(healthCheckMetaData, "", "  ")
+	fmt.Fprintln(w, string(bytes))
 }
 
 func main() {
