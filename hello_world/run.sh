@@ -10,4 +10,5 @@ docker run \
 --detach \
 --tty \
 --interactive \
+--rm \
 hello_world_go --port 8080

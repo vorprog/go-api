@@ -7,5 +7,4 @@ docker run \
 --tty \
 --interactive \
 --rm \
---name wasm_go \
 wasm_go
