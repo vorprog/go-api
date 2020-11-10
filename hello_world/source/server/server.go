@@ -12,9 +12,6 @@ import (
 	"github.com/richardsnider/golang/hello_world/util"
 )
 
-var buildDateVersionLinkerFlag string
-var buildCommitLinkerFlag string
-
 var appVersion = `1.0`
 var processStartTime = time.Now()
 
@@ -38,8 +35,8 @@ var hostname, hostnameError = os.Hostname()
 var healthCheckMetaData = appMetaData{
 	EnvironmentConfiguration: os.Getenv("APP_ENVIRONMENT_CONFIGURATION"),
 	Version:                  appVersion,
-	BuildGitCommit:           buildCommitLinkerFlag,
-	BuildDateVersion:         buildDateVersionLinkerFlag,
+	BuildGitCommit:           util.BuildCommitLinkerFlag,
+	BuildDateVersion:         util.BuildDateVersionLinkerFlag,
 	Hostname:                 hostname,
 	ProcessStartTime:         processStartTime,
 }
