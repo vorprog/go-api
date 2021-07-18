@@ -46,11 +46,11 @@ func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 	healthCheckMetaData.CurrentTimestamp = time.Now()
 	healthCheckMetaData.RequestGUID = util.GetURL(guidGeneratorURL)
 	metaDataBytes, _ := json.MarshalIndent(healthCheckMetaData, "", "  ")
+	log.Println(string(metaDataBytes))
 	fmt.Fprintln(w, string(metaDataBytes))
 }
 
-// Start starts the web server
-func Start(int port) {
+func Start(port *string) {
 	if hostnameError != nil {
 		log.Fatal(hostnameError)
 	}
@@ -59,6 +59,8 @@ func Start(int port) {
 	http.HandleFunc("/healthcheck", healthCheckHander)
 
 	portSpecification := ":" + *port
+	util.Log("port is " + *port)
+
 	serverError := http.ListenAndServe(portSpecification, nil)
 	if serverError != nil {
 		log.Fatal(serverError)

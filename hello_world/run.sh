@@ -2,13 +2,14 @@
 set -xe
 
 export ENVIRONMENT=${1:-dev}
-export PORT=${2:-8080}
+export HOST_PORT=${2:-8080}
+export CONTAINER_PORT=${3:-8080}
 
 docker run \
 --env APP_ENVIRONMENT_CONFIGURATION=$ENVIRONMENT \
---publish $PORT:8080 \
+--publish $HOST_PORT:$CONTAINER_PORT \
 --detach \
 --tty \
 --interactive \
 --rm \
-hello_world_go --port 8080
+go-server --port $CONTAINER_PORT

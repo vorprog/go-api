@@ -7,7 +7,6 @@ import (
 	"net/http"
 )
 
-// GetURL does things
 func GetURL(URL string) string {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
