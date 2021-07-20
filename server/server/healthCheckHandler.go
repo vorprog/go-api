@@ -25,14 +25,14 @@ func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 	requestGuid, getUrlError := util.GetURL("http://www.uuidgenerator.net/api/version1")
 
 	if getUrlError != nil {
-		util.LogError(getUrlError)
+		util.Log(getUrlError)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("HTTP STATUS 500 - Internal Server Error"))
 		return
 	}
 
 	if !guidRegexp.MatchString(requestGuid) {
-		util.LogError("GUID request resulted in " + requestGuid + ", which is not a valid GUID")
+		util.Log("GUID request resulted in " + requestGuid + ", which is not a valid GUID")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("HTTP STATUS 500 - Internal Server Error"))
 		return

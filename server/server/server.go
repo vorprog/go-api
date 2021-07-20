@@ -21,7 +21,7 @@ func Start(port string) {
 	util.Log("Listening on port " + port + " . . .")
 
 	if serverError != nil {
-		util.LogError(serverError)
+		util.Log(serverError)
 		os.Exit(1)
 	}
 }
