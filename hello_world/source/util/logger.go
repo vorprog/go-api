@@ -1,19 +1,15 @@
 package util
 
 import (
-	"encoding/json"
 	"log"
-	"runtime/debug"
+	"runtime"
+	"strconv"
 )
 
 func Log(message string) {
-	logJSON, err := json.Marshal(map[string]interface{}{
-		"stack":   string(debug.Stack()),
-		"message": "port is " + message,
-	})
-	if err != nil {
-		log.Fatalf("Unable to encode JSON in logger")
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		callerPrefix := file + "(" + strconv.Itoa(line) + ") "
+		log.Println(callerPrefix + message)
 	}
-
-	log.Println(string(logJSON))
 }
