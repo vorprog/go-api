@@ -19,8 +19,6 @@ type AppMetaData struct {
 	BuildDateVersion         string    `json:"BuildDateVersion"`
 	Hostname                 string    `json:"Hostname"`
 	ProcessStartTime         time.Time `json:"ProcessStartTime"`
-	CurrentTimestamp         time.Time `json:"CurrentTimestamp"`
-	RequestGUID              string    `json:"RequestGUID"`
 }
 
 var CurrentAppMetaData = AppMetaData{
