@@ -2,24 +2,29 @@ package util
 
 import (
 	"crypto/tls"
+	"errors"
 	"io/ioutil"
 	"net/http"
-	"os"
+	"strconv"
 )
 
-func GetURL(URL string) (result string) {
+func GetURL(URL string) (result string, err error) {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	response, httpGetError := http.Get(URL)
 	if httpGetError != nil {
-		os.Exit(1)
+		return "", httpGetError
 	}
 
 	defer response.Body.Close()
 	body, responseBodyError := ioutil.ReadAll(response.Body)
 	if responseBodyError != nil {
-		os.Exit(1)
+		return "", responseBodyError
 	}
 
-	return string(body)
+	if response.StatusCode >= 400 {
+		return "", errors.New("Unexpected response (HTTP STATUS CODE " + strconv.Itoa(response.StatusCode) + ") " + string(body))
+	}
+
+	return string(body), nil
 }

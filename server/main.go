@@ -8,9 +8,9 @@ import (
 )
 
 var defaultPort = "8080"
-var port = flag.String("port", defaultPort, "port to listen on")
+var port = *flag.String("port", defaultPort, "port to listen on")
 
 func main() {
-	util.Log("Started main package.")
+	util.Log("Loaded main module.")
 	server.Start(port)
 }

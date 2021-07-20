@@ -4,7 +4,7 @@ RUN apk add git
 WORKDIR /src/
 COPY . /src/
 ARG BUILD_COMMIT
-ENV LINKER_FLAG_PACKAGE=github.com/richardsnider/golang/server
+ENV LINKER_FLAG_PACKAGE=github.com/richardsnider/golang/server/util
 RUN go get -d ./...
 RUN export CURRENT_DATE_VERSION=$(date +'%Y.%m.%d.%H.%M.%S') && \
 CGO_ENABLED=0 \
