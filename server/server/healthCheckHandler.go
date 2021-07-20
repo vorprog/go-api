@@ -16,7 +16,7 @@ type requestMetaData struct {
 	RequestGUID      string           `json:"RequestGUID"`
 }
 
-var guidRegexp *regexp.Regexp = regexp.MustCompile("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$")
+var guidRegexp *regexp.Regexp = regexp.MustCompile("\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b")
 
 func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 	util.Log("Request from " + r.RemoteAddr)
@@ -31,12 +31,12 @@ func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !guidRegexp.MatchString(requestGuid) {
-		util.Log("GUID request resulted in " + requestGuid + ", which is not a valid GUID")
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("HTTP STATUS 500 - Internal Server Error"))
-		return
-	}
+	// if !guidRegexp.MatchString(requestGuid) {
+	// 	util.Log("GUID request resulted in " + requestGuid + ", which is not a valid GUID")
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	w.Write([]byte("HTTP STATUS 500 - Internal Server Error"))
+	// 	return
+	// }
 
 	healthCheckMetaData := requestMetaData{
 		AppMetaData:      util.CurrentAppMetaData,
