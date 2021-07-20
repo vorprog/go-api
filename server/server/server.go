@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/richardsnider/golang/server/source/util"
+	"github.com/richardsnider/golang/server/util"
 )
 
 var appVersion = `1.0`

@@ -2,7 +2,7 @@ FROM registry.hub.docker.com/library/golang:alpine AS build
 RUN apk add git
 
 WORKDIR /src/
-COPY ./source /src/
+COPY . /src/
 ARG BUILD_COMMIT
 ENV LINKER_FLAG_PACKAGE=github.com/richardsnider/golang/server
 RUN go get -d ./...
