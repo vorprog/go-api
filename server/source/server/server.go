@@ -3,12 +3,11 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/richardsnider/golang/hello_world/util"
+	"github.com/richardsnider/golang/server/source/util"
 )
 
 var appVersion = `1.0`
@@ -39,20 +38,30 @@ var healthCheckMetaData = appMetaData{
 }
 
 func rootPathHandler(w http.ResponseWriter, r *http.Request) {
+	util.Log()
 	fmt.Fprintln(w, "hello world!")
 }
 
 func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 	healthCheckMetaData.CurrentTimestamp = time.Now()
-	healthCheckMetaData.RequestGUID = util.GetURL(guidGeneratorURL)
-	metaDataBytes, _ := json.MarshalIndent(healthCheckMetaData, "", "  ")
-	log.Println(string(metaDataBytes))
-	fmt.Fprintln(w, string(metaDataBytes))
+	healthCheckMetaData.RequestGUID, getUrlError = util.GetURL(guidGeneratorURL)
+
+	if getUrlError {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500 - Something bad happened!"))
+		return
+	}
+
+	metaDataBytes, _ := json.Marshal(healthCheckMetaData)
+	metaData := string(metaDataBytes)
+	util.Log(metaData)
+	fmt.Fprintln(w, metaData)
 }
 
 func Start(port *string) {
 	if hostnameError != nil {
-		log.Fatal(hostnameError)
+		util.LogError(hostnameError)
+		os.Exit(1)
 	}
 
 	http.HandleFunc("/", rootPathHandler)
@@ -63,6 +72,7 @@ func Start(port *string) {
 
 	serverError := http.ListenAndServe(portSpecification, nil)
 	if serverError != nil {
-		log.Fatal(serverError)
+		util.LogError(serverError)
+		os.Exit(1)
 	}
 }

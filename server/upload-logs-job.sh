@@ -11,10 +11,7 @@ export AVAILABILITY_ZONE=$(curl $META_DATA_URL/placement/availability-zone)
 export REGION=${AVAILABILITY_ZONE::-1}
 
 CONTAINER_ID=$(sudo docker ps -aqf "name=$SERVICE_NAME")
-LOG_FILE_ITERATOR=1
-
-LOCAL_FILE_PATH=/var/lib/docker/containers/$CONTAINER_ID/$CONTAINER_ID.json.$LOG_FILE_ITERATOR
+LOCAL_FILE_PATH=/var/lib/docker/containers/$CONTAINER_ID
 DATE=$(date "+%m/%d/%Y")
-LAST_MODIFIED_TIMESTAMP=$(date -r $LOCAL_FILE_PATH +%s) # TODO: use file "birth time" instead?
 
-aws s3 cp $LOCAL_FILE_PATH s3://$S3_BUCKET_NAME/docker/$REGION/$SERVICE_NAME/$DATE/$INSTANCE_ID/$LAST_MODIFIED_TIMESTAMP.json.gz
+aws s3 sync $LOCAL_FILE_PATH s3://$S3_BUCKET_NAME/docker/$REGION/$SERVICE_NAME/$DATE/$INSTANCE_ID/$CONTAINER_ID
