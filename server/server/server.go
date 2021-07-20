@@ -44,13 +44,13 @@ func rootPathHandler(w http.ResponseWriter, r *http.Request) {
 
 func healthCheckHander(w http.ResponseWriter, r *http.Request) {
 	healthCheckMetaData.CurrentTimestamp = time.Now()
-	healthCheckMetaData.RequestGUID, getUrlError = util.GetURL(guidGeneratorURL)
+	healthCheckMetaData.RequestGUID = util.GetURL(guidGeneratorURL)
 
-	if getUrlError {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500 - Something bad happened!"))
-		return
-	}
+	// if getUrlError {
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	w.Write([]byte("500 - Something bad happened!"))
+	// 	return
+	// }
 
 	metaDataBytes, _ := json.Marshal(healthCheckMetaData)
 	metaData := string(metaDataBytes)
