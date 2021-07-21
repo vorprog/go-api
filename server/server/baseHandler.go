@@ -2,8 +2,8 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/richardsnider/golang/server/util"
@@ -40,5 +40,5 @@ func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	responseWriter.Write(responseContent)
 
 	requestProcessTime := time.Now().UTC().UnixNano() - result.RequestStartTimestamp
-	util.Log("Request ID " + result.RequestId + " took " + strconv.Itoa(int(requestProcessTime)) + "ns to respond with " + string(responseContent))
+	util.Log("Request ID " + result.RequestId + " took " + fmt.Sprint(requestProcessTime) + " ns to respond with " + string(responseContent))
 }
