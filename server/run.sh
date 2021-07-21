@@ -14,4 +14,5 @@ docker run \
 --tty \
 --interactive \
 --rm \
+--name go-server \
 go-server --port $CONTAINER_PORT
