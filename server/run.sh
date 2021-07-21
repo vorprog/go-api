@@ -5,9 +5,9 @@ export ENVIRONMENT=${1:-dev}
 export HOST_PORT=${2:-8080}
 export CONTAINER_PORT=${3:-8080}
 
-docker run \
---log-opt max-size=1m \
---log-opt max-file=10 \
+sudo docker run \
+--log-driver=fluentd \
+--log-opt fluentd-address=fluentdhost:24224 \
 --env APP_ENVIRONMENT_CONFIGURATION=$ENVIRONMENT \
 --publish $HOST_PORT:$CONTAINER_PORT \
 --detach \
