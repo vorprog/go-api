@@ -17,6 +17,5 @@ sudo docker run -d \
 --publish 24224:24224 \
 --publish 24224:24224/udp \
 --volume $(pwd)/fluent.conf:/fluentd/etc/fluent.conf \
+--name fluentd \
 fluentd-s3:latest fluentd --config /fluentd/etc/fluent.conf --verbose
-
-# --volume /data:/fluentd/log \
