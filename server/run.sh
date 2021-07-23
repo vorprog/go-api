@@ -7,7 +7,7 @@ export CONTAINER_PORT=${3:-8080}
 
 sudo docker run \
 --log-driver=fluentd \
---log-opt fluentd-address=fluentdhost:24224 \
+--log-opt fluentd-address=localhost:24224 \
 --env APP_ENVIRONMENT_CONFIGURATION=$ENVIRONMENT \
 --publish $HOST_PORT:$CONTAINER_PORT \
 --detach \
