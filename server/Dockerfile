@@ -13,6 +13,6 @@ go build \
 -o /bin/app
 
 FROM scratch
-COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /bin/app /bin/app
 ENTRYPOINT ["/bin/app"]
