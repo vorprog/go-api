@@ -7,7 +7,8 @@ export CONTAINER_PORT=${3:-8080}
 
 sudo docker run \
 --log-driver=fluentd \
---log-opt fluentd-address=localhost:24224 \
+--log-opt tag="{{.ImageName}}/{{.ImageID}}/{{.ID}}" \
+--log-opt fluentd-sub-second-precision=true \
 --env APP_ENVIRONMENT_CONFIGURATION=$ENVIRONMENT \
 --publish $HOST_PORT:$CONTAINER_PORT \
 --detach \
