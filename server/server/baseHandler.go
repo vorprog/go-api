@@ -18,7 +18,12 @@ type responseResult struct {
 func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	requestStartTimestamp := time.Now().UTC().UnixNano()
 	requestId := util.GetUuid()
-	util.Log("Request ID " + requestId + " " + request.Method + " request to " + request.URL.Path + " from " + request.RemoteAddr)
+	util.Log(map[string]interface{}{
+		"requestId ":       requestId,
+		"method":           request.Method,
+		"path":             request.URL.Path,
+		"requestIpAddress": request.RemoteAddr,
+	})
 
 	var responseStatusCode int = 200
 	var handlerResult interface{}
@@ -40,5 +45,9 @@ func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	responseWriter.Write(responseContent)
 
 	requestProcessTime := time.Now().UTC().UnixNano() - result.RequestStartTimestamp
-	util.Log("Request ID " + result.RequestId + " took " + fmt.Sprint(requestProcessTime) + " ns to respond with " + string(responseContent))
+	util.Log(map[string]interface{}{
+		"requestId ":  result.RequestId,
+		"requestTime": fmt.Sprint(requestProcessTime),
+		"result":      string(responseContent),
+	})
 }

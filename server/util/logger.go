@@ -12,14 +12,15 @@ func Log(message ...interface{}) {
 	log.SetFlags(0)
 	_, file, line, ok := runtime.Caller(1)
 	if ok {
-		var messageString string
-		jsonMessage, jsonMarshalError := json.Marshal(message)
+		jsonMessage, jsonMarshalError := json.Marshal(map[string]interface{}{
+			"source_code": file + "(" + strconv.Itoa(line) + ") ",
+			"message":     message,
+		})
+
 		if jsonMarshalError != nil {
-			messageString = fmt.Sprint(jsonMarshalError)
+			log.Println(fmt.Sprint(jsonMarshalError))
 		} else {
-			messageString = string(jsonMessage)
+			log.Println(string(jsonMessage))
 		}
-		callerPrefix := file + "(" + strconv.Itoa(line) + ") "
-		log.Println(callerPrefix + messageString)
 	}
 }
