@@ -30,7 +30,7 @@ jobs:
         - run: sudo docker run --env APP_SERVER_PORT=$APP_SERVER_PORT --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --name "test_$IMAGE_NAME" --detach $IMAGE_NAME:$COMMIT_SHA_TAG
         - run: sleep 5 && curl --verbose --head localhost:$TEST_CONTAINER_PORT
         - run: export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_CONTAINER_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
-        - if: ${{ env.CURL_TEST_HTTP_STATUS_CODE != "200" }}
+        - if: ${{ env.CURL_TEST_HTTP_STATUS_CODE != 200 }}
           run: |
             echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE"
             exit 1
