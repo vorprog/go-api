@@ -16,4 +16,4 @@ sudo docker run \
 --interactive \
 --rm \
 --name go-api \
-go-api --port $CONTAINER_PORT
+go-api -port=$CONTAINER_PORT
