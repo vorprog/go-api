@@ -1,0 +1,38 @@
+name: build
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      imageTag:
+        description: 'Image Tag'
+        required: false
+        default: 'latest'
+env:
+  GITHUB_REPO_URL: https://github.com/vorprog/golang.git
+  COMMIT_SHA_TAG: ${{ github.sha }}
+  IMAGE_NAME: go_server
+  APP_SERVER_PORT: 3000
+  TEST_CONTAINER_PORT: 3001
+  CURL_TEST_HTTP_STATUS_CODE: 0
+jobs:
+  build:
+    runs-on: [self-hosted, linux, ARM64]
+    steps:
+        - run: if [[ ! -d "git_source_code" ]]; then echo "git_source_code directory not found, cloning $GITHUB_REPO_URL . . ." && git clone $GITHUB_REPO_URL git_source_code; fi
+        - run: cd git_source_code && git pull && cd ..
+        - run: sudo docker build git_source_code --file git_source_code/Dockerfile --build-arg BUILD_COMMIT=$COMMIT_SHA_TAG --tag $IMAGE_NAME:$COMMIT_SHA_TAG --tag $IMAGE_NAME:latest
+  test:
+    runs-on: [self-hosted, linux, ARM64]
+    needs: build
+    steps:
+        - run: sudo docker run --env APP_SERVER_PORT=$APP_SERVER_PORT --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --name "test_$IMAGE_NAME" --detach $IMAGE_NAME:$COMMIT_SHA_TAG
+        - run: sleep 5 && curl --verbose --head localhost:$TEST_CONTAINER_PORT
+        - run: export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_CONTAINER_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
+        - if: ${{ env.CURL_TEST_HTTP_STATUS_CODE != "200" }}
+          run: |
+            echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE"
+            exit 1
+        - run: echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
+        - run: sudo docker rm --force "test_$IMAGE_NAME"
