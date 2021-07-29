@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/richardsnider/golang/server/util"
+	"github.com/vorprog/go-api/util"
 )
 
 type responseResult struct {

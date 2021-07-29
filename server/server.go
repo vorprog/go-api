@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/richardsnider/golang/server/util"
+	"github.com/vorprog/go-api/util"
 )
 
 func Start(port string) {

@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"github.com/richardsnider/golang/server/server"
-	"github.com/richardsnider/golang/server/util"
+	"github.com/vorprog/go-api/server"
+	"github.com/vorprog/go-api/util"
 )
 
 var defaultPort = "8080"

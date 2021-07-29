@@ -4,7 +4,7 @@ RUN apk --update add ca-certificates git
 WORKDIR /src/
 COPY . /src/
 ARG BUILD_COMMIT
-ENV LINKER_FLAG_PACKAGE=github.com/richardsnider/golang/server/util
+ENV LINKER_FLAG_PACKAGE=github.com/vorprog/go-api/util
 RUN go get -d ./...
 RUN export CURRENT_DATE_VERSION=$(date +'%Y.%m.%d.%H.%M.%S') && \
 CGO_ENABLED=0 \

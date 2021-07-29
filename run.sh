@@ -15,5 +15,5 @@ sudo docker run \
 --tty \
 --interactive \
 --rm \
---name go-server \
-go-server --port $CONTAINER_PORT
+--name go-api \
+go-api --port $CONTAINER_PORT

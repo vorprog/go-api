@@ -10,9 +10,9 @@ on:
         required: false
         default: 'latest'
 env:
-  GITHUB_REPO_URL: https://github.com/vorprog/golang.git
+  GITHUB_REPO_URL: https://github.com/vorprog/go-api.git
   COMMIT_SHA_TAG: ${{ github.sha }}
-  IMAGE_NAME: go_server
+  IMAGE_NAME: go-api
   APP_SERVER_PORT: 3000
   TEST_CONTAINER_PORT: 3001
   CURL_TEST_HTTP_STATUS_CODE: 0

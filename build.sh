@@ -7,4 +7,4 @@ GIT_CURRENT_COMMIT_HASH=$(git rev-parse HEAD)
 
 sudo docker build \
 --build-arg BUILD_COMMIT=${GIT_CURRENT_COMMIT_HASH} \
---tag go-server:latest .
+--tag go-api:latest .

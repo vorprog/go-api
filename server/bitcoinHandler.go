@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/richardsnider/golang/server/util"
+	"github.com/vorprog/go-api/util"
 )
 
 func bitcoinHandler(requestId string) (responseStatusCode int, responseContent interface{}) {
