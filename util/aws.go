@@ -1,7 +1,7 @@
 package util
 
 import (
-	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -14,7 +14,8 @@ func GetAwsIdentity() sts.GetCallerIdentityOutput {
 	result, err := svc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 
 	if err != nil {
-		log.Fatal(err)
+		Log(err)
+		os.Exit(1)
 	}
 
 	return *result
