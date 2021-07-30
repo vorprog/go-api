@@ -15,7 +15,6 @@ env:
   IMAGE_NAME: go-api
   APP_SERVER_PORT: 3000
   TEST_CONTAINER_PORT: 3001
-  CURL_TEST_HTTP_STATUS_CODE: 0
 jobs:
   build:
     runs-on: [self-hosted, linux, ARM64]
@@ -29,10 +28,8 @@ jobs:
     steps:
         - run: sudo docker run --env APP_SERVER_PORT=$APP_SERVER_PORT --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --name "test_$IMAGE_NAME" --detach $IMAGE_NAME:$COMMIT_SHA_TAG
         - run: sleep 5 && curl --verbose --head localhost:$TEST_CONTAINER_PORT
-        - run: export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_CONTAINER_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
-        - if: ${{ env.CURL_TEST_HTTP_STATUS_CODE != 200 }}
-          run: |
-            echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE"
-            exit 1
-        - run: echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
+        - run: |
+            export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_CONTAINER_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
+            if [[ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
+            echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
         - run: sudo docker rm --force "test_$IMAGE_NAME"
