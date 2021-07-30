@@ -9,7 +9,7 @@ func bitcoinHandler(requestId string) (responseStatusCode int, responseContent i
 
 	if getUrlError != nil {
 		util.Log(getUrlError)
-		return 500, "HTTP STATUS 500 - Internal Server Error"
+		return InternalServerError()
 	}
 
 	return 200, coindeskResponse

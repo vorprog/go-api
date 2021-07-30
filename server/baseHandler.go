@@ -27,7 +27,7 @@ func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	} else if request.URL.Path == "/bitcoin" {
 		responseStatusCode, handlerResult = bitcoinHandler(requestId)
 	} else {
-		handlerResult = nil
+		responseStatusCode, handlerResult = NotFound()
 	}
 
 	responseWriter.Header().Add(`request-id`, requestId)
