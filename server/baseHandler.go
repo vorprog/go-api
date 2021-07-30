@@ -9,12 +9,6 @@ import (
 	"github.com/vorprog/go-api/util"
 )
 
-type responseResult struct {
-	RequestId             string
-	RequestStartTimestamp int64
-	HandlerResult         interface{}
-}
-
 func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	requestStartTimestamp := time.Now().UTC().UnixNano()
 	requestId := util.GetUuid()
@@ -32,21 +26,18 @@ func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 		handlerResult = util.CurrentAppMetaData
 	} else if request.URL.Path == "/bitcoin" {
 		responseStatusCode, handlerResult = bitcoinHandler(requestId)
+	} else {
+		handlerResult = nil
 	}
 
-	result := responseResult{
-		RequestId:             requestId,
-		RequestStartTimestamp: requestStartTimestamp,
-		HandlerResult:         handlerResult,
-	}
-
+	responseWriter.Header().Add(`request-id`, requestId)
 	responseWriter.WriteHeader(responseStatusCode)
-	responseContent, _ := json.Marshal(result)
+	responseContent, _ := json.Marshal(handlerResult)
 	responseWriter.Write(responseContent)
 
-	requestProcessTime := time.Now().UTC().UnixNano() - result.RequestStartTimestamp
+	requestProcessTime := time.Now().UTC().UnixNano() - requestStartTimestamp
 	util.Log(map[string]interface{}{
-		"requestId ":  result.RequestId,
+		"requestId ":  requestId,
 		"requestTime": fmt.Sprint(requestProcessTime),
 		"result":      string(responseContent),
 	})
