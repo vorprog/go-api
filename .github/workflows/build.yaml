@@ -27,7 +27,7 @@ jobs:
     runs-on: [self-hosted, linux, ARM64]
     needs: build
     steps:
-        - run: sudo docker run --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --name "test_$IMAGE_NAME" --detach $IMAGE_NAME:$COMMIT_SHA_TAG -port=$APP_SERVER_PORT
+        - run: sudo docker run --env APP_SERVER_PORT=$APP_SERVER_PORT --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --name "test_$IMAGE_NAME" --detach $IMAGE_NAME:$COMMIT_SHA_TAG
         - run: sleep 5 && curl --verbose --head localhost:$TEST_CONTAINER_PORT
         - run: export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_CONTAINER_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
         - if: ${{ env.CURL_TEST_HTTP_STATUS_CODE != 200 }}

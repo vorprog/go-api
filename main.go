@@ -1,20 +1,20 @@
 package main
 
 import (
-	"flag"
+	"os"
 
 	"github.com/vorprog/go-api/server"
 	"github.com/vorprog/go-api/util"
 )
 
-var defaultPort = "8080"
-var port = *flag.String("port", defaultPort, "port to listen on")
-
 func main() {
 	util.Log("Loaded main module.")
+
 	awsIdentity := util.GetAwsIdentity()
 	util.Log(awsIdentity)
 
 	go util.Monitor()
+
+	port := os.Getenv("APP_SERVER_PORT")
 	server.Start(port)
 }
