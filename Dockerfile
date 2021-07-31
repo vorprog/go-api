@@ -4,12 +4,11 @@ RUN apk --update add ca-certificates git
 WORKDIR /src/
 COPY . /src/
 ARG BUILD_COMMIT
-ENV LINKER_FLAG_PACKAGE=github.com/vorprog/go-api/util
 RUN go get -d ./...
 RUN export CURRENT_DATE_VERSION=$(date +'%Y.%m.%d.%H.%M.%S') && \
 CGO_ENABLED=0 \
 go build \
--ldflags "-X $LINKER_FLAG_PACKAGE.BuildCommitLinkerFlag=$BUILD_COMMIT -X $LINKER_FLAG_PACKAGE.BuildDateVersionLinkerFlag=$CURRENT_DATE_VERSION" \
+-ldflags "-X github.com/vorprog/go-api/util.BuildCommitLinkerFlag=$BUILD_COMMIT -X github.com/vorprog/go-api/util.BuildDateVersionLinkerFlag=$CURRENT_DATE_VERSION" \
 -o /bin/app
 
 FROM scratch
