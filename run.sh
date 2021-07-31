@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
 set -xe
 
-export ENVIRONMENT=${1:-dev}
-export HOST_PORT=${2:-8080}
-export CONTAINER_PORT=${3:-8080}
+export IMAGE_NAME=go-api
+export COMMIT_SHA_TAG=$(git rev-parse HEAD)
+export APP_ENVIRONMENT_CONFIGURATION=${1:-dev}
+export HOST_PORT=${2:-80}
+export APP_SERVER_PORT=8080
+
+sudo docker build \
+--build-arg BUILD_COMMIT=$COMMIT_SHA_TAG \
+--tag $IMAGE_NAME:$COMMIT_SHA_TAG \
+--tag go-api:latest \
+.
 
 sudo docker run \
 --log-driver=fluentd \
 --log-opt tag="{{.ImageName}}/{{.ImageID}}/{{.ID}}" \
 --log-opt fluentd-sub-second-precision=true \
---env APP_ENVIRONMENT_CONFIGURATION=$ENVIRONMENT \
---publish $HOST_PORT:$CONTAINER_PORT \
---detach \
---tty \
---interactive \
+--env APP_ENVIRONMENT_CONFIGURATION=$APP_ENVIRONMENT_CONFIGURATION \
+--env APP_SERVER_PORT=$APP_SERVER_PORT \
+--publish $HOST_PORT:$APP_SERVER_PORT \
 --rm \
---name go-api \
-go-api -port=$CONTAINER_PORT
+--detach \
+--name $IMAGE_NAME \
+$IMAGE_NAME:$COMMIT_SHA_TAG
