@@ -17,12 +17,12 @@ var BuildDateVersionLinkerFlag string
 var BuildCommitLinkerFlag string
 
 type AppMetaData struct {
-	EnvironmentConfiguration string `json:"EnvironmentConfiguration"`
-	Version                  string `json:"Version"`
-	BuildGitCommit           string `json:"BuildGitCommit"`
-	BuildDateVersion         string `json:"BuildDateVersion"`
-	Hostname                 string `json:"Hostname"`
-	ProcessStartTime         int64  `json:"ProcessStartTime"`
+	EnvironmentConfiguration string
+	Version                  string
+	BuildGitCommit           string
+	BuildDateVersion         string
+	Hostname                 string
+	ProcessStartTime         int64
 }
 
 var CurrentAppMetaData = AppMetaData{
