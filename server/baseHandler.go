@@ -12,6 +12,7 @@ import (
 func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	requestStartTimestamp := time.Now().UTC().UnixNano()
 	requestId := util.GetUuid()
+	responseWriter.Header().Add("Request-Id", requestId)
 	util.Log(map[string]interface{}{
 		"requestId ":       requestId,
 		"method":           request.Method,
@@ -27,12 +28,27 @@ func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	} else if request.URL.Path == "/bitcoin" {
 		responseStatusCode, handlerResult = bitcoinHandler(requestId)
 	} else {
-		responseStatusCode, handlerResult = NotFound()
+		responseStatusCode = 404
+		handlerResult = util.Http404Message
 	}
 
-	responseWriter.Header().Add(`request-id`, requestId)
+	var responseContent []byte
+
+	handlerResultString, handlerResultIsString := handlerResult.(string)
+	if handlerResultIsString {
+		responseContent = []byte(handlerResultString)
+	} else {
+		var jsonMarshalError error
+		responseContent, jsonMarshalError = json.Marshal(handlerResult)
+
+		if jsonMarshalError != nil {
+			util.Log(jsonMarshalError)
+			responseStatusCode = 500
+			responseContent = []byte(util.Http500Message)
+		}
+	}
+
 	responseWriter.WriteHeader(responseStatusCode)
-	responseContent, _ := json.Marshal(handlerResult)
 	responseWriter.Write(responseContent)
 
 	requestProcessTime := time.Now().UTC().UnixNano() - requestStartTimestamp
