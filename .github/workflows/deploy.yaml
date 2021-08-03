@@ -32,7 +32,7 @@ jobs:
             --log-driver=fluentd \
             --log-opt fluentd-address=$FLUENTD_HOST \
             --log-opt fluentd-sub-second-precision=true \
-            --log-opt tag="{{.ImageName}}/{{.ImageID}}/{{.ID}}" \
+            --log-opt tag="docker.{{.ImageName}}.{{.ImageID}}.{{.ID}}" \
             --env APP_ENVIRONMENT_CONFIGURATION=$APP_ENVIRONMENT_CONFIGURATION \
             --env APP_SERVER_PORT=$APP_SERVER_PORT \
             --publish $HOST_PORT:$APP_SERVER_PORT \
