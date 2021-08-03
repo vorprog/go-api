@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -51,10 +50,10 @@ func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	responseWriter.WriteHeader(responseStatusCode)
 	responseWriter.Write(responseContent)
 
-	requestProcessTime := time.Now().UTC().UnixNano() - requestStartTimestamp
 	util.Log(map[string]interface{}{
-		"requestId ":  requestId,
-		"requestTime": fmt.Sprint(requestProcessTime),
-		"result":      string(responseContent),
+		"requestId ":         requestId,
+		"requestProcessTime": time.Now().UTC().UnixNano() - requestStartTimestamp,
+		"responseStatusCode": responseStatusCode,
+		"result":             responseContent,
 	})
 }
