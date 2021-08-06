@@ -10,6 +10,7 @@ import (
 
 func Monitor() {
 	var cpuWriter bytes.Buffer
+	runtime.SetCPUProfileRate(400)
 	err := pprof.StartCPUProfile(&cpuWriter)
 
 	if err != nil {
