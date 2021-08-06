@@ -1,11 +1,22 @@
 package util
 
 import (
+	"bytes"
+	"os"
 	"runtime"
+	"runtime/pprof"
 	"time"
 )
 
 func Monitor() {
+	var cpuWriter bytes.Buffer
+	err := pprof.StartCPUProfile(&cpuWriter)
+
+	if err != nil {
+		Log(err)
+		os.Exit(1)
+	}
+
 	for {
 		time.Sleep(2 * time.Second)
 
@@ -13,9 +24,8 @@ func Monitor() {
 		runtime.ReadMemStats(memory)
 
 		Log(map[string]interface{}{
-			"cpu":       runtime.NumCPU(),
-			"memory":    memory.Alloc,
-			"goRoutine": runtime.NumGoroutine(),
+			"cpu":    cpuWriter.String(),
+			"memory": memory.Alloc,
 		})
 	}
 }
