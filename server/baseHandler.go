@@ -54,6 +54,6 @@ func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 		"requestId ":         requestId,
 		"requestProcessTime": time.Now().UTC().UnixNano() - requestStartTimestamp,
 		"responseStatusCode": responseStatusCode,
-		"result":             responseContent,
+		"result":             string(responseContent),
 	})
 }
