@@ -33,9 +33,15 @@ jobs:
     needs: build
     runs-on: [self-hosted, linux, ARM64]
     steps:
-      - run: sudo docker run --env APP_SERVER_PORT=$TEST_CONTAINER_PORT --publish $TEST_HOST_PORT:$TEST_CONTAINER_PORT --name "test_$IMAGE_NAME" --detach $IMAGE_NAME:$COMMIT_SHA_TAG
-      - run: sleep 5 && curl --verbose --head localhost:$TEST_HOST_PORT
       - run: |
+          sudo docker run \
+          --env APP_SERVER_PORT=$TEST_CONTAINER_PORT \
+          --publish $TEST_HOST_PORT:$TEST_CONTAINER_PORT \
+          --name "$IMAGE_NAME-test" \
+          --detach \
+          $IMAGE_NAME:$COMMIT_SHA_TAG
+          sleep 5 
+          curl --verbose --head localhost:$TEST_HOST_PORT
           export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_HOST_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
           if [[ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
           echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
