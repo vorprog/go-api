@@ -44,9 +44,11 @@ jobs:
           export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_HOST_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
           if [[ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
           echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
-      - run: sudo docker rm --force "test_$IMAGE_NAME"
+          sudo docker rm --force "${GITHUB_REPOSITORY##*/}-test"
   push:
     needs: test
     runs-on: [self-hosted, linux, ARM64]
     steps:
-      - run: sudo docker push $IMAGE_NAME:$GITHUB_SHA --all-tags
+      - run: |
+          sudo docker push $IMAGE_NAME:$GITHUB_SHA --all-tags
+          sudo docker rmi $IMAGE_NAME:$GITHUB_SHA $IMAGE_NAME:latest
