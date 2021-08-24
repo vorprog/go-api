@@ -10,7 +10,7 @@ on:
         description: Image Tag
         required: false
         default: latest
-env: # https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
+env:
   IMAGE_NAME: ghcr.io/${{github.repository}}
   GITHUB_TOKEN: ${{ secrets.GH_TOKEN }} # needed for pushing to ghcr.io
   TEST_CONTAINER_PORT: 3000
@@ -36,7 +36,7 @@ jobs:
           sudo docker run \
           --env APP_SERVER_PORT=$TEST_CONTAINER_PORT \
           --publish $TEST_HOST_PORT:$TEST_CONTAINER_PORT \
-          --name "$GITHUB_REPOSITORY-test" \
+          --name "${GITHUB_REPOSITORY##*/}-test" \
           --detach \
           $IMAGE_NAME:$GITHUB_SHA
           sleep 5 
