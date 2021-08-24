@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
       - run: |
-          sudo docker build --file Dockerfile \
+          sudo docker build $GITHUB_WORKSPACE \
           --build-arg BUILD_COMMIT=$COMMIT_SHA_TAG \
           --tag $IMAGE_NAME:$COMMIT_SHA_TAG \
           --tag $IMAGE_NAME:latest
