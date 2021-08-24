@@ -12,7 +12,6 @@ on:
         default: latest
 env:
   IMAGE_NAME: ghcr.io/${{github.repository}}
-  GITHUB_TOKEN: ${{ secrets.GH_TOKEN }} # needed for pushing to ghcr.io
   TEST_CONTAINER_PORT: 3000
   TEST_HOST_PORT: 3001
 defaults:
