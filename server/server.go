@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"os"
 
+	_ "net/http/pprof"
+
 	"github.com/vorprog/go-api/util"
 )
 
