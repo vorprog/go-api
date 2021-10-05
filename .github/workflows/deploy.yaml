@@ -39,6 +39,7 @@ jobs:
           --env APP_ENVIRONMENT_CONFIGURATION=$APP_ENVIRONMENT_CONFIGURATION \
           --env APP_SERVER_PORT=$APP_SERVER_PORT \
           --publish $HOST_PORT:$APP_SERVER_PORT \
+          --restart always \
           --rm \
           --detach \
           --name "${GITHUB_REPOSITORY##*/}" \
