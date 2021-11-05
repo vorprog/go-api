@@ -6,7 +6,7 @@ import (
 )
 
 var ProcessStartTime = time.Now().UnixNano()
-var AppVersion = "1.1"
+var AppVersion = "1.2"
 var hostname, _ = os.Hostname()
 
 const Http200Message = "HTTP 200 - OK"
