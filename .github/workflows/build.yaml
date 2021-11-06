@@ -58,5 +58,6 @@ jobs:
           registry.hub.docker.com/library/registry:latest
           sudo docker push $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
       - name: docker-cleanup
+        run: |
           sudo docker rmi $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
           sudo docker rm --force registry.hub.docker.com/library/registry:latest
