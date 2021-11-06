@@ -13,7 +13,10 @@ on:
         required: false
         default: latest
 env:
-  IMAGE_NAME: ghcr.io/${{github.repository}}
+  IMAGE_NAME: go-api
+  REGISTRY_HOST: localhost:5000
+  REGISTRY_STORAGE_S3_REGION: us-west-2
+  REGISTRY_STORAGE_S3_BUCKET: vorprog-container-registry
   TEST_CONTAINER_PORT: 3000
   TEST_HOST_PORT: 3001
 defaults:
@@ -23,17 +26,16 @@ jobs:
   build:
     runs-on: [self-hosted, linux, ARM64]
     steps:
-      - uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
-      - run: |
+      - id: git-checkout
+        uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
+      - id: docker-build
+        run: |
           sudo docker build $GITHUB_WORKSPACE \
           --build-arg BUILD_COMMIT=$GITHUB_SHA \
-          --tag $IMAGE_NAME:$GITHUB_SHA \
-          --tag $IMAGE_NAME:latest
-  test:
-    needs: build
-    runs-on: [self-hosted, linux, ARM64]
-    steps:
-      - run: |
+          --tag $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA \
+          --tag $REGISTRY_HOST/$IMAGE_NAME:latest
+      - id: docker-run-test
+        run: |
           sudo docker run \
           --env APP_SERVER_PORT=$TEST_CONTAINER_PORT \
           --publish $TEST_HOST_PORT:$TEST_CONTAINER_PORT \
@@ -46,11 +48,15 @@ jobs:
           if [[ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
           echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
           sudo docker rm --force "${GITHUB_REPOSITORY##*/}-test"
-  push:
-    needs: test
-    runs-on: [self-hosted, linux, ARM64]
-    steps:
-      - run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-          sudo docker push $IMAGE_NAME --all-tags
-          sudo docker rmi $IMAGE_NAME:$GITHUB_SHA $IMAGE_NAME:latest
+      - id: push-image-to-s3
+        run: |
+          sudo docker run \
+          --env REGISTRY_STORAGE=s3 \
+          --env REGISTRY_STORAGE_S3_REGION=$REGISTRY_STORAGE_S3_REGION \
+          --env REGISTRY_STORAGE_S3_BUCKET=$REGISTRY_STORAGE_S3_BUCKET \
+          --detach \
+          --publish 80:5000 \
+          registry.hub.docker.com/library/registry:latest
+          sudo docker push $REGISTRY_HOST/$IMAGE_NAME --all-tags
+          sudo docker rmi $IMAGE_NAME $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA $REGISTRY_HOST/$IMAGE_NAME:latest
+          sudo docker rm --force registry.hub.docker.com/library/registry:latest
