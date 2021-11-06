@@ -25,12 +25,17 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: [self-hosted, linux, ARM64]
     steps:
-      - run: |
+      - id: cleanup
+        run: |
           export EXISTING_CONTAINER_ID=$(sudo docker ps --quiet --filter name="${GITHUB_REPOSITORY##*/}")
           if [[ -z "${EXISTING_CONTAINER_ID-}" ]]; then echo "No existing container named ${GITHUB_REPOSITORY##*/} is running. Exiting current step." && exit 0; fi
           sudo docker inspect $EXISTING_CONTAINER_ID --format 'ID {{ .Id }} {{printf "\n"}}Started at {{ .State.StartedAt }} {{printf "\n"}}Image ID {{ .Image }}'
           sudo docker rm --force $EXISTING_CONTAINER_ID
-      - run: |
+      - id: pull-image
+        run: |
+          sudo docker pull $IMAGE_NAME:$GITHUB_SHA
+      - id: start-container
+        run: |
           sudo docker run \
           --log-driver=fluentd \
           --log-opt fluentd-address=$FLUENTD_HOST \
@@ -39,7 +44,6 @@ jobs:
           --env APP_ENVIRONMENT_CONFIGURATION=$APP_ENVIRONMENT_CONFIGURATION \
           --env APP_SERVER_PORT=$APP_SERVER_PORT \
           --publish $HOST_PORT:$APP_SERVER_PORT \
-          --restart always \
           --rm \
           --detach \
           --name "${GITHUB_REPOSITORY##*/}" \
