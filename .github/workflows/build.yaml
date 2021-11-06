@@ -14,7 +14,7 @@ on:
         default: latest
 env:
   IMAGE_NAME: go-api
-  REGISTRY_HOST: localhost:5000
+  REGISTRY_HOST: 127.0.0.1:5000
   REGISTRY_STORAGE_S3_REGION: us-west-2
   REGISTRY_STORAGE_S3_BUCKET: vorprog-container-registry
   TEST_CONTAINER_PORT: 3000
