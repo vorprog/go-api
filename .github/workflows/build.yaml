@@ -26,29 +26,28 @@ jobs:
   build:
     runs-on: [self-hosted, linux, ARM64]
     steps:
-      - id: git-checkout
+      - name: git-checkout
         uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
-      - id: docker-build
+      - name: docker-build
         run: |
           sudo docker build $GITHUB_WORKSPACE \
           --build-arg BUILD_COMMIT=$GITHUB_SHA \
           --tag $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA \
-          --tag $REGISTRY_HOST/$IMAGE_NAME:latest
-      - id: docker-run-test
+      - name: docker-run-test
         run: |
           sudo docker run \
           --env APP_SERVER_PORT=$TEST_CONTAINER_PORT \
           --publish $TEST_HOST_PORT:$TEST_CONTAINER_PORT \
           --name "${GITHUB_REPOSITORY##*/}-test" \
           --detach \
-          $IMAGE_NAME:$GITHUB_SHA
+          $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
           sleep 5 
           curl --verbose --head localhost:$TEST_HOST_PORT
           export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_HOST_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
           if [[ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
           echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
           sudo docker rm --force "${GITHUB_REPOSITORY##*/}-test"
-      - id: push-image-to-s3
+      - name: push-image-to-s3
         run: |
           sudo docker run \
           --env REGISTRY_STORAGE=s3 \
@@ -57,6 +56,7 @@ jobs:
           --detach \
           --publish 80:5000 \
           registry.hub.docker.com/library/registry:latest
-          sudo docker push $REGISTRY_HOST/$IMAGE_NAME --all-tags
-          sudo docker rmi $IMAGE_NAME $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA $REGISTRY_HOST/$IMAGE_NAME:latest
+          sudo docker push $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
+      - name: docker-cleanup
+          sudo docker rmi $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
           sudo docker rm --force registry.hub.docker.com/library/registry:latest
