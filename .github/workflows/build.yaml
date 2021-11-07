@@ -54,10 +54,11 @@ jobs:
           --env REGISTRY_STORAGE_S3_REGION=$REGISTRY_STORAGE_S3_REGION \
           --env REGISTRY_STORAGE_S3_BUCKET=$REGISTRY_STORAGE_S3_BUCKET \
           --detach \
-          --publish 5000:5000 \
+          --publish 127.0.0.1:5000:5000 \
+          --name "local-docker-registry" \
           registry.hub.docker.com/library/registry:latest
           sudo docker push $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
       - name: docker-cleanup
         run: |
           sudo docker rmi $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
-          sudo docker rm --force registry.hub.docker.com/library/registry:latest
+          sudo docker rm --force local-docker-registry
