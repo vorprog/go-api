@@ -14,7 +14,7 @@ on:
         default: latest
 env:
   IMAGE_NAME: go-api
-  REGISTRY_HOST: 127.0.0.1:5000
+  REGISTRY_HOST: "127.0.0.1"
   REGISTRY_STORAGE_S3_REGION: us-west-2
   REGISTRY_STORAGE_S3_BUCKET: vorprog-container-registry
   TEST_CONTAINER_PORT: 3000
@@ -54,7 +54,7 @@ jobs:
           --env REGISTRY_STORAGE_S3_REGION=$REGISTRY_STORAGE_S3_REGION \
           --env REGISTRY_STORAGE_S3_BUCKET=$REGISTRY_STORAGE_S3_BUCKET \
           --detach \
-          --publish 127.0.0.1:5000:5000 \
+          --publish 127.0.0.1:80:5000 \
           --name "local-docker-registry" \
           registry.hub.docker.com/library/registry:latest
           sudo docker push $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
