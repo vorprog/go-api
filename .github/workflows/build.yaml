@@ -53,7 +53,7 @@ jobs:
             --env REGISTRY_STORAGE_S3_REGION=$REGISTRY_STORAGE_S3_REGION \
             --env REGISTRY_STORAGE_S3_BUCKET=$REGISTRY_STORAGE_S3_BUCKET \
             --detach \
-            --publish localhost:5000 \
+            --publish 80:5000 \
             --name "local-docker-registry" \
             registry.hub.docker.com/library/registry:latest
           sleep 5
