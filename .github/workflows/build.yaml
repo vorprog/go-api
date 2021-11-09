@@ -14,7 +14,6 @@ on:
         default: latest
 env:
   IMAGE_NAME: go-api
-  REGISTRY_HOST: localhost
   REGISTRY_STORAGE_S3_REGION: us-west-2
   REGISTRY_STORAGE_S3_BUCKET: vorprog-container-registry
   TEST_CONTAINER_PORT: 3000
@@ -32,7 +31,7 @@ jobs:
         run: |
           sudo docker build $GITHUB_WORKSPACE \
             --build-arg BUILD_COMMIT=$GITHUB_SHA \
-            --tag $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA \
+            --tag localhost/$IMAGE_NAME:$GITHUB_SHA \
       - name: docker-run-test
         run: |
           sudo docker run \
@@ -40,8 +39,8 @@ jobs:
             --publish $TEST_HOST_PORT:$TEST_CONTAINER_PORT \
             --name "${GITHUB_REPOSITORY##*/}-test" \
             --detach \
-            $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
-          sleep 5 
+            localhost/$IMAGE_NAME:$GITHUB_SHA
+          sleep 5
           curl --verbose --head localhost:$TEST_HOST_PORT
           export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_HOST_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
           if [[ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
@@ -54,12 +53,12 @@ jobs:
             --env REGISTRY_STORAGE_S3_REGION=$REGISTRY_STORAGE_S3_REGION \
             --env REGISTRY_STORAGE_S3_BUCKET=$REGISTRY_STORAGE_S3_BUCKET \
             --detach \
-            --publish 127.0.0.1:80:5000 \
+            --publish localhost:5000 \
             --name "local-docker-registry" \
             registry.hub.docker.com/library/registry:latest
           sleep 5
-          curl localhost/v2
-          sudo docker push $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
+          curl --verbose --head localhost/v2
+          sudo docker push localhost/$IMAGE_NAME:$GITHUB_SHA
       - name: docker-cleanup
         run: |
           sudo docker rmi $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA

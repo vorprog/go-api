@@ -15,7 +15,9 @@ defaults:
   run:
     shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
 env:
-  IMAGE_NAME: localhost/${{github.repository}}
+  IMAGE_NAME: ${{github.repository}}
+  REGISTRY_STORAGE_S3_REGION: us-west-2
+  REGISTRY_STORAGE_S3_BUCKET: vorprog-container-registry
   HOST_PORT: 80
   APP_SERVER_PORT: 80
   FLUENTD_HOST: fluentd.vorprog.com:24224
@@ -25,16 +27,27 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: [self-hosted, linux, ARM64]
     steps:
-      - id: cleanup
+      - name: cleanup-existing-container
         run: |
           export EXISTING_CONTAINER_ID=$(sudo docker ps --quiet --filter name="${GITHUB_REPOSITORY##*/}")
           if [[ -z "${EXISTING_CONTAINER_ID-}" ]]; then echo "No existing container named ${GITHUB_REPOSITORY##*/} is running. Exiting current step." && exit 0; fi
           sudo docker inspect $EXISTING_CONTAINER_ID --format 'ID {{ .Id }} {{printf "\n"}}Started at {{ .State.StartedAt }} {{printf "\n"}}Image ID {{ .Image }}'
           sudo docker rm --force $EXISTING_CONTAINER_ID
-      - id: pull-image
+      - name: pull-image
         run: |
-          sudo docker pull $IMAGE_NAME:$GITHUB_SHA
-      - id: start-container
+          sudo docker run \
+            --env REGISTRY_STORAGE=s3 \
+            --env REGISTRY_STORAGE_S3_REGION=$REGISTRY_STORAGE_S3_REGION \
+            --env REGISTRY_STORAGE_S3_BUCKET=$REGISTRY_STORAGE_S3_BUCKET \
+            --detach \
+            --publish localhost:5000 \
+            --name "local-docker-registry" \
+            registry.hub.docker.com/library/registry:latest
+          sleep 5
+          curl --verbose --head localhost/v2
+          sudo docker pull localhost/$IMAGE_NAME:$GITHUB_SHA
+          sudo docker rm --force local-docker-registry
+      - name: start-container
         run: |
           sudo docker run \
           --log-driver=fluentd \
@@ -47,4 +60,4 @@ jobs:
           --rm \
           --detach \
           --name "${GITHUB_REPOSITORY##*/}" \
-          $IMAGE_NAME:$GITHUB_SHA
+          localhost/$IMAGE_NAME:$GITHUB_SHA
