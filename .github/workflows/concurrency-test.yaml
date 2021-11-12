@@ -17,19 +17,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          curl ifconfig.me && echo ""
+          curl --silent ifconfig.me
   virtual-user-2:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          curl ifconfig.me && echo ""
+          curl --silent ifconfig.me
   virtual-user-3:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          curl ifconfig.me && echo ""
+          curl --silent ifconfig.me
   virtual-user-4:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          curl ifconfig.me && echo ""
+          curl --silent ifconfig.me
