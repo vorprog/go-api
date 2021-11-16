@@ -1,10 +1,11 @@
 FROM registry.hub.docker.com/library/golang:alpine AS build-artifact-stage
 RUN apk --update add ca-certificates curl git jq
 
-RUN export SOPS_RELEASE_URL="https://api.github.com/repos/mozilla/sops/releases/latest"
-RUN export SOPS_DOWNLOAD_URL=$(curl --silent $SOPS_RELEASE_URL | jq -r '.assets[] | select(.browser_download_url | contains(".linux")).browser_download_url')
-RUN sudo curl -L $SOPS_DOWNLOAD_URL --output /bin/sops
-RUN sudo chmod +x /bin/sops
+ENV SOPS_RELEASE_URL "https://api.github.com/repos/mozilla/sops/releases/latest"
+RUN curl --silent $SOPS_RELEASE_URL | jq -r '.assets[] | select(.browser_download_url | contains(".linux")).browser_download_url' >> /tmp/sops_download_url
+RUN cat /tmp/sops_download_url
+RUN curl -L $(cat /tmp/sops_download_url) --output /bin/sops
+RUN chmod +x /bin/sops
 
 WORKDIR /src/
 COPY . /src/
