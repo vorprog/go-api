@@ -1,5 +1,10 @@
 FROM registry.hub.docker.com/library/golang:alpine AS build-artifact-stage
-RUN apk --update add ca-certificates git
+RUN apk --update add ca-certificates curl git jq
+
+RUN export SOPS_RELEASE_URL="https://api.github.com/repos/mozilla/sops/releases/latest"
+RUN export SOPS_DOWNLOAD_URL=$(curl --silent $SOPS_RELEASE_URL | jq -r '.assets[] | select(.browser_download_url | contains(".linux")).browser_download_url')
+RUN sudo curl -L $SOPS_DOWNLOAD_URL --output /bin/sops
+RUN sudo chmod +x /bin/sops
 
 WORKDIR /src/
 COPY . /src/
@@ -14,4 +19,5 @@ go build \
 FROM scratch AS copy-artifact-stage
 COPY --from=build-artifact-stage /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build-artifact-stage /bin/app /bin/app
+COPY --from=build-artifact-stage /bin/sops /bin/sops
 ENTRYPOINT ["/bin/app"]
