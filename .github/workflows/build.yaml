@@ -17,6 +17,7 @@ defaults:
     shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
 env:
   IMAGE_NAME: ${{github.repository}}
+  REGISTRY_HOST: localhost:5000
   REGISTRY_STORAGE_S3_REGION: us-west-2
   REGISTRY_STORAGE_S3_BUCKET: vorprog-container-registry
   TEST_CONTAINER_PORT: 3000
@@ -31,7 +32,7 @@ jobs:
         run: |
           sudo docker build $GITHUB_WORKSPACE \
             --build-arg BUILD_COMMIT=$GITHUB_SHA \
-            --tag localhost/$IMAGE_NAME:$GITHUB_SHA \
+            --tag $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA \
       - name: docker-run-test
         run: |
           sudo docker run \
@@ -39,7 +40,7 @@ jobs:
             --publish $TEST_HOST_PORT:$TEST_CONTAINER_PORT \
             --name "${GITHUB_REPOSITORY##*/}-test" \
             --detach \
-            localhost/$IMAGE_NAME:$GITHUB_SHA
+            $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
           sleep 5
           curl --verbose --head localhost:$TEST_HOST_PORT
           export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_HOST_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
@@ -53,13 +54,13 @@ jobs:
             --env REGISTRY_STORAGE_S3_REGION=$REGISTRY_STORAGE_S3_REGION \
             --env REGISTRY_STORAGE_S3_BUCKET=$REGISTRY_STORAGE_S3_BUCKET \
             --detach \
-            --publish 127.0.0.1:80:5000 \
+            --publish 127.0.0.1:5000:5000 \
             --name "local-docker-registry" \
             registry.hub.docker.com/library/registry:latest
           sleep 5
-          curl --silent --head localhost/v2
-          sudo docker push localhost/$IMAGE_NAME:$GITHUB_SHA
+          curl --silent --head $REGISTRY_HOST/v2
+          sudo docker push $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
       - name: docker-cleanup
         run: |
-          sudo docker rmi localhost/$IMAGE_NAME:$GITHUB_SHA
+          sudo docker rmi $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
           sudo docker rm --force local-docker-registry
