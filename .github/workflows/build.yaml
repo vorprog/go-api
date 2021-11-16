@@ -64,3 +64,4 @@ jobs:
         run: |
           sudo docker rmi $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
           sudo docker rm --force local-docker-registry
+          sudo docker system prune --all --force

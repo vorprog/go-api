@@ -33,7 +33,7 @@ jobs:
           if [[ -z "${EXISTING_CONTAINER_ID-}" ]]; then echo "No existing container named ${GITHUB_REPOSITORY##*/} is running. Exiting current step." && exit 0; fi
           sudo docker inspect $EXISTING_CONTAINER_ID --format 'ID {{ .Id }} {{printf "\n"}}Started at {{ .State.StartedAt }} {{printf "\n"}}Image ID {{ .Image }}'
           sudo docker rm --force $EXISTING_CONTAINER_ID
-          sudo docker rmi localhost/$IMAGE_NAME:$GITHUB_SHA
+          sudo docker system prune --all --force
       - name: pull-image
         run: |
           sudo docker run \
