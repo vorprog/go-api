@@ -3,12 +3,13 @@ package util
 import (
 	"encoding/json"
 	"os"
+	"strings"
 )
 
 // SetEnvironmentFromSopsURL Retrieve a sops file from specified SOPS_FILE_URL environment variable.
 // Then decrypt the content into key value pairs and set environment variables for each.
 func SetEnvironmentFromSopsURL() error {
-	var sopsVersion, sopsVersionError = runCommand("", "sops --version")
+	var sopsVersion, sopsVersionError = RunCommand("sops --version")
 
 	if sopsVersionError != nil {
 		return sopsVersionError
@@ -24,8 +25,9 @@ func SetEnvironmentFromSopsURL() error {
 		return sopsURLError
 	}
 
-	// TODO: is sops /dev/stdin actual command input here?
-	var decryptedJSON, commandError = runCommand(encryptedContent, "sops --input-type json --output type json /dev/stdin")
+	encryptedContent = strings.ReplaceAll(encryptedContent, "\n", "")
+
+	var decryptedJSON, commandError = RunCommand(encryptedContent + " | " + "sops --input-type json --output type json /dev/stdin")
 	if commandError != nil {
 		return commandError
 	}
