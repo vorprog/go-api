@@ -10,7 +10,11 @@ import (
 func main() {
 	util.Log("Loaded main module.")
 	if os.Getenv("SOPS_FILE_URL") != "" {
-		util.SetEnvironmentFromSopsURL()
+		var sopsError = util.SetEnvironmentFromSopsURL()
+		if sopsError != nil {
+			util.Log(sopsError)
+			os.Exit(1)
+		}
 	}
 
 	awsIdentity := util.GetAwsIdentity()
