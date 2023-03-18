@@ -17,7 +17,7 @@ go build \
 -ldflags "-X github.com/vorprog/go-api/util.BuildCommitLinkerFlag=$BUILD_COMMIT -X github.com/vorprog/go-api/util.BuildDateVersionLinkerFlag=$CURRENT_DATE_VERSION" \
 -o /bin/app
 
-FROM scratch AS copy-artifact-stage
+FROM scratch
 COPY --from=build-artifact-stage /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build-artifact-stage /bin/sh /bin/cd /bin/ls /bin/echo /bin/printenv /bin/df /bin/
 COPY --from=build-artifact-stage /bin/sops /bin/sops

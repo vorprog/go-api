@@ -1,38 +1,55 @@
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 name: build
-on:
+on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads
   push:
-    branches:
-      - main
-    paths-ignore:
-      - .github
+    paths:
+      - Dockerfile
+      - go.mod
+      - ./**.go
   workflow_dispatch:
-    inputs:
-      imageTag:
-        description: Image Tag
+    inputs:  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
+      manual-workflow-comment:
+        description: Manual workflow_dispatch needs at least one input parameter. Use this for comments on the reason for running the workflow manually.
         required: false
-        default: latest
+        default: Manual workflow_dispatch trigger
+env:
+  IMAGE_NAME: ghcr.io/${{github.repository}}
+  SEMANTIC_VERSION: 0.0.${{ github.run_number }}
 defaults:
   run:
     shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
-env:
-  IMAGE_NAME: ${{github.repository}}
-  REGISTRY_HOST: localhost:5000
-  REGISTRY_STORAGE_S3_REGION: us-west-2
-  REGISTRY_STORAGE_S3_BUCKET: vorprog-container-registry
-  TEST_CONTAINER_PORT: 3000
-  TEST_HOST_PORT: 3001
 jobs:
-  build:
+  build-tag-push:
+    runs-on: ubuntu-latest # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+    steps:
+      - uses: actions/checkout@v3 # https://github.com/actions/checkout/blob/main/action.yml
+      - id: build
+        run: |
+          sudo docker build $GITHUB_WORKSPACE \
+          --build-arg BUILD_COMMIT=$GITHUB_SHA \
+          --build-arg SEMANTIC_VERSION=$SEMANTIC_VERSION \
+          --tag $IMAGE_NAME:$GITHUB_SHA
+      - id: tag-default
+        if: github.ref_name == github.event.repository.default_branch
+        run: |
+          sudo docker tag $IMAGE_NAME:$GITHUB_SHA $IMAGE_NAME:$SEMANTIC_VERSION
+          sudo docker tag $IMAGE_NAME:$GITHUB_SHA $IMAGE_NAME:latest
+          git tag $SEMANTIC_VERSION
+          git push origin $SEMANTIC_VERSION
+      - id: tag-other
+        if: github.ref_name != github.event.repository.default_branch
+        run: |
+          sudo docker tag $IMAGE_NAME:$GITHUB_SHA $IMAGE_NAME:$GITHUB_REF_NAME-$SEMANTIC_VERSION
+          sudo docker tag $IMAGE_NAME:$GITHUB_SHA $IMAGE_NAME:$GITHUB_REF_NAME-latest
+      - id: push
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+          sudo docker push $IMAGE_NAME --all-tags
+  test:
     runs-on: [self-hosted, linux, ARM64]
     steps:
       - name: git-checkout
-        uses: actions/checkout@v2 # https://github.com/actions/checkout/blob/main/action.yml
-      - name: docker-build
-        run: |
-          sudo docker build $GITHUB_WORKSPACE \
-            --build-arg BUILD_COMMIT=$GITHUB_SHA \
-            --tag $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA \
+        uses: actions/checkout@v3 # https://github.com/actions/checkout/blob/main/action.yml
       - name: docker-run-test
         run: |
           sudo docker run \

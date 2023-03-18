@@ -1,0 +1,34 @@
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+name: build
+on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads
+  workflow_dispatch:
+    inputs:  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
+      manual-workflow-comment:
+        description: Manual workflow_dispatch needs at least one input parameter. Use this for comments on the reason for running the workflow manually.
+        required: false
+        default: Manual workflow_dispatch trigger
+env:
+  IMAGE_NAME: ghcr.io/${{github.repository}}
+  TEST_CONTAINER_PORT: 3000
+  TEST_HOST_PORT: 3001
+defaults:
+  run:
+    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+jobs:
+  test:
+    runs-on: ubuntu-latest # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+    steps:
+      - name: git-checkout
+        uses: actions/checkout@v3 # https://github.com/actions/checkout/blob/main/action.yml
+      - name: docker-run-test
+        run: |
+          sudo docker run \
+            --env APP_SERVER_PORT=$TEST_CONTAINER_PORT \
+            --publish $TEST_HOST_PORT:$TEST_CONTAINER_PORT \
+            --detach \
+            $IMAGE_NAME:$GITHUB_SHA
+          sleep 5
+          curl --verbose --head localhost:$TEST_HOST_PORT
+          export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_HOST_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
+          if [[ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
+          echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
