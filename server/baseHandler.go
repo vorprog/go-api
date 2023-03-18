@@ -26,6 +26,8 @@ func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 		handlerResult = util.CurrentAppMetaData
 	} else if request.URL.Path == "/bitcoin" {
 		responseStatusCode, handlerResult = bitcoinHandler(requestId)
+	} else if request.URL.Path == "/websocket" {
+		serveWebsocket(responseWriter, request)
 	} else {
 		responseStatusCode = 404
 		handlerResult = util.Http404Message
