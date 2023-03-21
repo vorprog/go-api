@@ -2,20 +2,22 @@ package server
 
 import (
 	"net/http"
-	"os"
 
 	_ "net/http/pprof"
 
 	"github.com/vorprog/go-api/util"
 )
 
-func Start(port string) {
-	util.Log("Server starting . . .")
+func Start(port string) error {
+	util.Log(map[string]interface{}{
+		"messsage ": "server starting",
+		"port":      port,
+	})
 	serverError := http.ListenAndServe(":"+port, http.HandlerFunc(baseHandler))
-	util.Log("Listening on port " + port + " . . .")
 
 	if serverError != nil {
-		util.Log(serverError)
-		os.Exit(1)
+		return serverError
 	}
+
+	return nil
 }

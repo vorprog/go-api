@@ -1,8 +1,10 @@
 package main
 
 import (
+	"log"
 	"os"
 
+	"github.com/samber/lo"
 	"github.com/vorprog/go-api/server"
 	"github.com/vorprog/go-api/util"
 )
@@ -13,15 +15,24 @@ func main() {
 		var sopsError = util.SetEnvironmentFromSopsURL()
 		if sopsError != nil {
 			util.Log(sopsError)
-			os.Exit(1)
+			return
 		}
 	}
 
-	awsIdentity := util.GetAwsIdentity()
-	util.Log(awsIdentity)
+	awsIdentity, err := util.GetAwsIdentity()
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		util.Log(awsIdentity)
+	}
 
 	go util.Monitor()
 
-	port := os.Getenv("APP_SERVER_PORT")
-	server.Start(port)
+	port, _ := lo.Coalesce(os.Getenv("APP_SERVER_PORT"), "8080")
+	err = server.Start(port)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
