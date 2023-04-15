@@ -1,9 +1,11 @@
 package util
 
 import (
+	"io"
+
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
@@ -20,24 +22,20 @@ func GetAwsIdentity() (sts.GetCallerIdentityOutput, error) {
 	return *result, nil
 }
 
-func GetS3File(s3Bucket string, s3Key string) ([]byte, error) {
-	sess := session.New()
-	var svc s3iface.S3API = s3.New(sess)
-	response, err := svc.GetObject(&s3.GetObjectInput{
-		Bucket: &s3Bucket,
-		Key:    &s3Key,
+func GetS3File(bucketName string, filename string, region string) (file io.Reader, err error) {
+	s3Session, err := session.NewSession(&aws.Config{
+		Region: aws.String(region),
 	})
-
 	if err != nil {
 		return nil, err
 	}
-
-	var bodyContent []byte
-	_, readErr := response.Body.Read(bodyContent)
-
-	if readErr != nil {
-		return nil, readErr
+	s3Client := s3.New(s3Session)
+	s3Object, err := s3Client.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(filename),
+	})
+	if err != nil {
+		return nil, err
 	}
-
-	return bodyContent, nil
+	return s3Object.Body, nil
 }
