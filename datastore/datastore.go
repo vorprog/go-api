@@ -1,54 +1,119 @@
 package datastore
 
 import (
+	"context"
 	"database/sql"
-	"encoding/gob"
-	"os"
 	"reflect"
 	"strings"
 
 	"github.com/samber/lo"
-	"github.com/vorprog/go-api/util"
 )
 
+var database *sql.DB
 var datasets = map[string]map[string]interface{}{}
 var datasetTypes = map[string]reflect.Type{}
 var datasetQueries = map[string]string{}
-var database *sql.DB
+var dataTypes = map[string]string{
+	"string":  "TEXT",
+	"int":     "INTEGER",
+	"int64":   "INTEGER",
+	"float64": "REAL",
+	"bool":    "INTEGER",
+}
 
-func Init(initDatasetTypes map[string]reflect.Type) error {
-	datasetTypes = initDatasetTypes
-	for datasetName := range datasetTypes {
-		setPersistentStoreQueryString(datasetName)
+type DatastoreInit struct {
+	DatasetTypes map[string]reflect.Type
+	SqlUrl       string
+	Context      context.Context
+}
+
+func setPersistentStoreQueryString(datasetName string) {
+	datasetType := datasetTypes[datasetName]
+
+	var columns []string
+	for i := 0; i < datasetType.NumField(); i++ {
+		columns = append(columns, datasetType.Field(i).Name)
 	}
 
-	for _, datasetName := range strings.Split(os.Getenv("DATASETS"), ",") {
-		gobFile, err := util.GetS3File(os.Getenv("S3_BUCKET"), datasetName+".gob", os.Getenv("AWS_REGION"))
-		if err != nil {
-			return err
-		}
+	columnsString := strings.Join(columns, ",")
+	datasetQueries[datasetName] = "INSERT INTO " + datasetName + " (id," + columnsString + ") VALUES (?,?" + strings.Repeat(",?", len(columns)-1) + ")"
+}
 
-		var dataset map[string]interface{}
-		err = gob.NewDecoder(gobFile).Decode(&dataset)
-		if err != nil {
-			return err
-		}
-
-		datasets[datasetName] = dataset
-	}
-
-	database, err := sql.Open("sqlite3", "file:/app/data.db?cache=shared&mode=rwc")
+func Init(init DatastoreInit) error {
+	database, err := sql.Open("sqlite3", init.SqlUrl)
 	if err != nil {
 		return err
 	}
 
 	defer database.Close()
 
+	datasetTypes = init.DatasetTypes
+	for datasetName := range datasetTypes {
+
+		dataType := datasetTypes[datasetName]
+		var columns []string
+		for i := 0; i < dataType.NumField(); i++ {
+			if dataType.Field(i).PkgPath != "" {
+				columns = append(columns, dataType.Field(i).Name+" "+dataTypes[dataType.Field(i).Type.Name()])
+			}
+		}
+
+		sqlStatement := "CREATE TABLE IF NOT EXISTS " + datasetName + " (id TEXT PRIMARY KEY, " + strings.Join(columns, ",") + ")"
+		_, err = database.Exec(sqlStatement)
+		if err != nil {
+			return err
+		}
+
+		setPersistentStoreQueryString(datasetName)
+	}
+
 	return nil
+}
+
+func Store(datasetName string, datasetItemKey string, datasetItemValue interface{}) (sql.Result, error) {
+	values := []interface{}{datasetItemKey}
+	for i := 0; i < datasetTypes[datasetName].NumField(); i++ {
+		if datasetTypes[datasetName].Field(i).PkgPath != "" {
+			values = append(values, reflect.ValueOf(datasetItemValue).Field(i).Interface())
+		}
+	}
+
+	return database.Exec(datasetQueries[datasetName], values...)
+}
+
+func Set(datasetName string, datasetItemKey string, datasetItemValue interface{}) error {
+	if _, err := Store(datasetName, datasetItemKey, datasetItemValue); err != nil {
+		return err
+	}
+
+	datasets[datasetName][datasetItemKey] = datasetItemValue
+	return nil
+}
+
+func Delete(datasetName string, datasetItemKey string) error {
+	if _, err := peristentDelete(datasetName, datasetItemKey); err != nil {
+		return err
+	}
+
+	delete(datasets[datasetName], datasetItemKey)
+	return nil
+}
+
+func peristentDelete(datasetName string, datasetItemKey string) (sql.Result, error) {
+	return database.Exec("DELETE FROM "+datasetName+" WHERE id = ?", datasetItemKey)
 }
 
 func Get(datasetName string, iteratee func(key string, value interface{}) (string, interface{})) map[string]interface{} {
 	return lo.MapEntries(datasets[datasetName], iteratee)
+}
+
+func GetFromStore[T interface{}](datasetName string, key string) (T, error) {
+	var queryResults, err = Query[T](datasetName, "SELECT * FROM "+datasetName+" WHERE id = "+key)
+	if err != nil {
+		return nil, err
+	}
+
+	return queryResults[0], nil
 }
 
 func Query[T interface{}](datasetName string, query string) ([]T, error) {
@@ -77,46 +142,4 @@ func GetKeys(datasetName string) []string {
 		datasetItemKeys = append(datasetItemKeys, datasetItemKey)
 	}
 	return datasetItemKeys
-}
-
-func Set(datasetName string, datasetItemKey string, datasetItemValue interface{}) {
-	persistentStore(datasetName, datasetItemKey, datasetItemValue)
-	datasets[datasetName][datasetItemKey] = datasetItemValue
-}
-
-func Delete(datasetName string, datasetItemKey string) {
-	peristentDelete(datasetName, datasetItemKey)
-	delete(datasets[datasetName], datasetItemKey)
-}
-
-func persistentStore(datasetName string, datasetItemKey string, datasetItemValue interface{}) (sql.Result, error) {
-	if datasetQueries[datasetName] == "" {
-		setPersistentStoreQueryString(datasetName)
-	}
-
-	var values []interface{}
-	values = append(values, datasetItemKey)
-	for i := 0; i < datasetTypes[datasetName].NumField(); i++ {
-		if datasetTypes[datasetName].Field(i).PkgPath != "" {
-			values = append(values, reflect.ValueOf(datasetItemValue).Field(i).Interface())
-		}
-	}
-
-	return database.Exec(datasetQueries[datasetName], values...)
-}
-
-func setPersistentStoreQueryString(datasetName string) {
-	datasetType := datasetTypes[datasetName]
-
-	var columns []string
-	for i := 0; i < datasetType.NumField(); i++ {
-		columns = append(columns, datasetType.Field(i).Name)
-	}
-
-	columnsString := strings.Join(columns, ",")
-	datasetQueries[datasetName] = "INSERT INTO " + datasetName + " (id," + columnsString + ") VALUES (?,?" + strings.Repeat(",?", len(columns)-1) + ")"
-}
-
-func peristentDelete(datasetName string, datasetItemKey string) (sql.Result, error) {
-	return database.Exec("DELETE FROM "+datasetName+" WHERE id = ?", datasetItemKey)
 }
