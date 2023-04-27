@@ -26,10 +26,9 @@ type AppMetaData struct {
 }
 
 var CurrentAppMetaData = AppMetaData{
-	EnvironmentConfiguration: os.Getenv("APP_ENVIRONMENT_CONFIGURATION"),
-	Version:                  AppVersion,
-	BuildGitCommit:           BuildCommitLinkerFlag,
-	BuildDateVersion:         BuildDateVersionLinkerFlag,
-	Hostname:                 hostname,
-	ProcessStartTime:         ProcessStartTime,
+	Version:          AppVersion,
+	BuildGitCommit:   BuildCommitLinkerFlag,
+	BuildDateVersion: BuildDateVersionLinkerFlag,
+	Hostname:         hostname,
+	ProcessStartTime: ProcessStartTime,
 }

@@ -27,7 +27,7 @@ jobs:
           --platform linux/amd64,linux/arm64,linux/arm/v7 \
           --build-arg BUILD_COMMIT=$GITHUB_SHA \
           --build-arg SEMANTIC_VERSION=$SEMANTIC_VERSION \
-          --tag $IMAGE_NAME:$GITHUB_SHA \
+          --tag $IMAGE_NAME:$GITHUB_SHA
       - id: tag-default
         if: github.ref_name == github.event.repository.default_branch
         run: |
