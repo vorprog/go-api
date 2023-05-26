@@ -1,7 +1,8 @@
 package main
 
 import (
-	"reflect"
+	"strconv"
+	"syscall"
 
 	"github.com/vorprog/go-api/datastore"
 	"github.com/vorprog/go-api/server"
@@ -9,13 +10,12 @@ import (
 )
 
 func main() {
-	util.Log("Loaded main module.")
+	pid, _, _ := syscall.Syscall(syscall.SYS_GETPID, 0, 0, 0)
+	util.Log("process id: " + strconv.Itoa(int(pid)))
 	go util.Monitor()
 	util.InitConfig()
 
-	err := datastore.Init(map[string]reflect.Type{
-		"user": reflect.TypeOf(user.User{}),
-	})
+	_, err := datastore.Init()
 	if err != nil {
 		util.Log(err)
 		panic(err)

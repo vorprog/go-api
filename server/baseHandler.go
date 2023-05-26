@@ -18,7 +18,7 @@ func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 		"requestIpAddress": request.RemoteAddr,
 	}
 	util.Log(requestInfo)
-	datastore.Set("events", requestInfo["id"].(string), requestInfo)
+	datastore.Store("INSERT into events (id, method, path, request_ip_address) VALUES (?, ?, ?, ?)", requestInfo["id"], requestInfo["method"], requestInfo["path"], requestInfo["requestIpAddress"])
 
 	responseWriter.Header().Add("Request-Id", requestInfo["id"].(string))
 	var responseStatusCode int = 200
