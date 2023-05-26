@@ -13,7 +13,9 @@ func main() {
 	go util.Monitor()
 	util.InitConfig()
 
-	err := datastore.Init(map[string]reflect.Type{})
+	err := datastore.Init(map[string]reflect.Type{
+		"user": reflect.TypeOf(user.User{}),
+	})
 	if err != nil {
 		util.Log(err)
 		panic(err)
