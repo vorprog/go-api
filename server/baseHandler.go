@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -11,14 +12,16 @@ import (
 
 func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	requestStartTimestamp := time.Now().UTC().UnixNano()
+	ctx := context.WithValue(request.Context(), "requestId", util.GetUuid())
 	requestInfo := map[string]interface{}{
-		"id ":              util.GetUuid(),
+		"id ":              ctx.Value("requestId").(string),
 		"method":           request.Method,
 		"path":             request.URL.Path,
 		"requestIpAddress": request.RemoteAddr,
 	}
+
 	util.Log(requestInfo)
-	datastore.Store("INSERT into events (id, method, path, request_ip_address) VALUES (?, ?, ?, ?)", requestInfo["id"], requestInfo["method"], requestInfo["path"], requestInfo["requestIpAddress"])
+	datastore.Upsert("events", requestInfo)
 
 	responseWriter.Header().Add("Request-Id", requestInfo["id"].(string))
 	var responseStatusCode int = 200

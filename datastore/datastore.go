@@ -2,7 +2,10 @@ package datastore
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
+
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/samber/lo"
 	"github.com/vorprog/go-api/util"
@@ -10,6 +13,10 @@ import (
 
 var persistentDb *sql.DB
 var cacheDb *sql.DB
+
+const upsertSqlTemplate = `INSERT INTO %s (%s)
+VALUES (%s)
+ON CONFLICT(%s) DO UPDATE SET %s`
 
 func Init() (result sql.Result, err error) {
 	persistentDb, err = sql.Open("sqlite3", util.Config.SQLiteUrl)
@@ -25,11 +32,21 @@ func Init() (result sql.Result, err error) {
 	return cacheDb.Exec(".restore cache_db" + util.Config.SQLiteUrl)
 }
 
-func Upsert(tableName string, data map[string]string) (result sql.Result, err error) {
-	colmnNames := strings.Join(lo.Keys(data), ",")
-	placeholders := lo.MapToSlice(data, func(key string, value string) string { return "?" })
-	sql := "INSERT INTO " + tableName + " (" + colmnNames + ") VALUES (" + strings.Join(placeholders, ",") + ") ON CONFLICT(id) DO UPDATE SET " + util.Join(columns, " = ?, ") + " = ?"
-	return Store(sql, lo.Values(data)...)
+func Upsert(tableName string, data map[string]interface{}) (result sql.Result, err error) {
+	columnNames := lo.Keys(data)
+	impliedPrimaryKey := columnNames[0]
+	columnsToUpdate := lo.Slice(columnNames, 1, len(columnNames))
+	insertValuePlaceholders := lo.Map(columnNames, func(columnName string, index int) string { return "?" })
+	updateSql := lo.Map(columnsToUpdate, func(columnName string, index int) string { return columnName + "=excluded." + columnName })
+
+	sql := fmt.Sprintf(upsertSqlTemplate,
+		tableName,
+		strings.Join(columnNames, ","),
+		strings.Join(insertValuePlaceholders, ","),
+		impliedPrimaryKey,
+		strings.Join(updateSql, ","))
+
+	return Cache(sql, lo.Values(data)...)
 }
 
 func Store(sql string, values ...any) (sql.Result, error) {
