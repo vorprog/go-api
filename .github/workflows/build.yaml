@@ -24,6 +24,7 @@ jobs:
       - uses: docker/build-push-action@v4
         with:
           tags: "${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          platforms: linux/arm64v8
           build-args: |
             BUILD_COMMIT=${{ github.sha }}
             SEMANTIC_VERSION=${{ env.SEMANTIC_VERSION }}
