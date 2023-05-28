@@ -12,7 +12,7 @@ defaults: { run: { shell: 'bash -ex {0}' } } # https://docs.github.com/en/action
 env:
   IMAGE_NAME: ghcr.io/${{github.repository}}
   SEMANTIC_VERSION: 0.0.${{ github.run_number }}
-run-name: "${{ github.event.ref }}_${{ github.sha }} ${{ github.event.inputs.run-comment }}"
+run-name: "${{ github.event.ref }} ${{ github.sha }} ${{ github.event.inputs.run-comment }}"
 jobs:
   build-tag-push:
     runs-on: ubuntu-latest # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
@@ -24,7 +24,7 @@ jobs:
       - id: build
         run: |
           sudo docker buildx build $GITHUB_WORKSPACE \
-          --platform inux/arm64 \
+          --platform inux/arm64v8 \
           --build-arg BUILD_COMMIT=$GITHUB_SHA \
           --build-arg SEMANTIC_VERSION=$SEMANTIC_VERSION \
           --tag $IMAGE_NAME:$GITHUB_SHA
