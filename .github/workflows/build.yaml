@@ -6,16 +6,13 @@ on: # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook
       - ./**.go
   workflow_dispatch:
     inputs:  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
-      manual-workflow-comment:
-        description: Manual workflow_dispatch needs at least one input parameter. Use this for comments on the reason for running the workflow manually.
-        required: false
-        default: Manual workflow_dispatch trigger
+      run-comment: 
+        default: ""
+defaults: { run: { shell: 'bash -ex {0}' } } # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
 env:
   IMAGE_NAME: ghcr.io/${{github.repository}}
   SEMANTIC_VERSION: 0.0.${{ github.run_number }}
-defaults:
-  run:
-    shell: bash -ex {0} # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#custom-shell
+run-name: "${{ github.event.ref }}_${{ github.sha }} ${{ github.event.inputs.run-comment }}"
 jobs:
   build-tag-push:
     runs-on: ubuntu-latest # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
