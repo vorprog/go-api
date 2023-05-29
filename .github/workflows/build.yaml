@@ -35,6 +35,22 @@ jobs:
           --tag $IMAGE_NAME:$GITHUB_SHA \
           --tag $IMAGE_NAME:$GITHUB_REF_NAME-$SEMANTIC_VERSION \
           --tag $IMAGE_NAME:$GITHUB_REF_NAME-latest
+      - name: test
+        run: |
+          sudo docker run \
+            --publish 8080:8080 \
+            --name "test-container" \
+            --detach \
+            $IMAGE_NAME:$GITHUB_SHA
+          sleep 5
+          curl --verbose --head localhost:8080
+          export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:8080 --write-out '%{http_code}\n' --silent --output test-response-content.txt)
+          if [[ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
+      - name: release binary
+        run: |
+          sudo docker cp test-container:/bin/app .
+          sudo docker rm --force test-container
+          gh release create ${{ github.env.SEMANTIC_VERSION }} ./app
       - name: tag default branch
         if: github.ref_name == github.event.repository.default_branch
         run: |
@@ -47,40 +63,3 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
           sudo docker push $IMAGE_NAME --all-tags
           sudo docker system prune --force
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: git-checkout
-        uses: actions/checkout@v3 # https://github.com/actions/checkout/blob/main/action.yml
-      - name: docker-run-test
-        run: |
-          sudo docker run \
-            --env APP_SERVER_PORT=$TEST_CONTAINER_PORT \
-            --publish $TEST_HOST_PORT:$TEST_CONTAINER_PORT \
-            --name "${GITHUB_REPOSITORY##*/}-test" \
-            --detach \
-            $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
-          sleep 5
-          curl --verbose --head localhost:$TEST_HOST_PORT
-          export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_HOST_PORT --write-out '%{http_code}\n' --silent --output test-response-content.txt)
-          if [[ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
-          echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
-          sudo docker rm --force "${GITHUB_REPOSITORY##*/}-test"
-      - name: push-image-to-s3
-        run: |
-          sudo docker run \
-            --env REGISTRY_STORAGE=s3 \
-            --env REGISTRY_STORAGE_S3_REGION=$REGISTRY_STORAGE_S3_REGION \
-            --env REGISTRY_STORAGE_S3_BUCKET=$REGISTRY_STORAGE_S3_BUCKET \
-            --detach \
-            --publish 127.0.0.1:5000:5000 \
-            --name "local-docker-registry" \
-            registry.hub.docker.com/library/registry:latest
-          sleep 5
-          curl --silent --head $REGISTRY_HOST/v2
-          sudo docker push $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
-      - name: docker-cleanup
-        run: |
-          sudo docker rmi $REGISTRY_HOST/$IMAGE_NAME:$GITHUB_SHA
-          sudo docker rm --force local-docker-registry
-          sudo docker system prune --all --force
