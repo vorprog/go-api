@@ -14,6 +14,7 @@ import (
 var persistentDb *sql.DB
 var cacheDb *sql.DB
 
+// https://www.sqlite.org/lang_UPSERT.html
 const upsertSqlTemplate = `INSERT INTO %s (%s)
 VALUES (%s)
 ON CONFLICT(%s) DO UPDATE SET %s`
