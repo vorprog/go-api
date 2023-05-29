@@ -21,6 +21,5 @@ go build \
 
 FROM scratch
 COPY --from=build-artifact-stage /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=build-artifact-stage /bin/sh /bin/cd /bin/ls /bin/echo /bin/printenv /bin/df /bin/
-COPY --from=build-artifact-stage /bin/app /bin/app
+COPY --from=build-artifact-stage /bin/ /bin/
 ENTRYPOINT ["/bin/app"]
