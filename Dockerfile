@@ -8,9 +8,11 @@ RUN apk --update add ca-certificates curl git jq
 # RUN chmod +x /bin/sops
 
 WORKDIR /src/
+COPY go.mod go.sum /src/
+RUN go get -d ./...
+
 COPY . /src/
 ARG BUILD_COMMIT
-RUN go get -d ./...
 RUN export CURRENT_DATE_VERSION=$(date --utc +'%Y.%m.%d.%H.%M.%S') && \
 CGO_ENABLED=0 \
 go build \
@@ -20,6 +22,5 @@ go build \
 FROM scratch
 COPY --from=build-artifact-stage /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build-artifact-stage /bin/sh /bin/cd /bin/ls /bin/echo /bin/printenv /bin/df /bin/
-COPY --from=build-artifact-stage /bin/sops /bin/sops
 COPY --from=build-artifact-stage /bin/app /bin/app
 ENTRYPOINT ["/bin/app"]
