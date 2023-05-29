@@ -1,4 +1,4 @@
-FROM arm64v8/golang AS build-artifact-stage
+FROM arm64v8/golang:1.20-alpine AS build-artifact-stage
 RUN apk --update add ca-certificates curl git jq
 
 # ENV SOPS_RELEASE_URL "https://api.github.com/repos/mozilla/sops/releases/latest"
