@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+	_ "net/http/pprof"
 	"strconv"
 	"syscall"
 
@@ -29,7 +31,12 @@ func main() {
 		util.Log(awsIdentity)
 	}
 
-	err = server.Start(util.Config.ServerPort)
+	util.Log(map[string]interface{}{
+		"messsage ": "server starting",
+		"port":      util.Config.ServerPort,
+	})
+
+	err = http.ListenAndServe(":"+util.Config.ServerPort, http.HandlerFunc(server.BaseHandler))
 	if err != nil {
 		util.Log(err)
 		panic(err)

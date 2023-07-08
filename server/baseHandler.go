@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/vorprog/go-api/datastore"
 	"github.com/vorprog/go-api/util"
 )
 
-func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
+func BaseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	requestStartTimestamp := time.Now().UTC().UnixNano()
 	ctx := context.WithValue(request.Context(), "requestId", util.GetUuid())
 	requestInfo := map[string]interface{}{
@@ -21,7 +22,8 @@ func baseHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	}
 
 	util.Log(requestInfo)
-	datastore.Upsert("events", requestInfo)
+	var requestsDb = lo.ValueOr(datastore.PersistentDbs, "file:///app/requests", datastore.PersistentDbs["default"])
+	datastore.Upsert(requestsDb, "requests", requestInfo)
 
 	responseWriter.Header().Add("Request-Id", requestInfo["id"].(string))
 	var responseStatusCode int = 200

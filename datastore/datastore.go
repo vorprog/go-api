@@ -11,8 +11,8 @@ import (
 	"github.com/vorprog/go-api/util"
 )
 
-var persistentDb *sql.DB
-var cacheDb *sql.DB
+var PersistentDbs map[string]*sql.DB
+var CacheDb *sql.DB
 
 // https://www.sqlite.org/lang_UPSERT.html
 const upsertSqlTemplate = `INSERT INTO %s (%s)
@@ -20,20 +20,24 @@ VALUES (%s)
 ON CONFLICT(%s) DO UPDATE SET %s`
 
 func Init() (result sql.Result, err error) {
-	persistentDb, err = sql.Open("sqlite3", util.Config.SQLiteUrl)
+	for _, sqliteUrl := range util.Config.SQLiteUrls {
+		persistentDb, err := sql.Open("sqlite3", sqliteUrl)
+		if err != nil {
+			return nil, err
+		}
+
+		PersistentDbs[sqliteUrl] = persistentDb
+	}
+
+	CacheDb, err = sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		return
 	}
 
-	cacheDb, err = sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		return
-	}
-
-	return cacheDb.Exec(".restore cache_db" + util.Config.SQLiteUrl)
+	return CacheDb.Exec(".restore cache_db " + util.Config.CacheSqLLiteUrl)
 }
 
-func Upsert(tableName string, data map[string]interface{}) (result sql.Result, err error) {
+func Upsert(db *sql.DB, tableName string, data map[string]interface{}) (result sql.Result, err error) {
 	columnNames := lo.Keys(data)
 	impliedPrimaryKey := columnNames[0]
 	columnsToUpdate := lo.Slice(columnNames, 1, len(columnNames))
@@ -47,36 +51,32 @@ func Upsert(tableName string, data map[string]interface{}) (result sql.Result, e
 		impliedPrimaryKey,
 		strings.Join(updateSql, ","))
 
-	return Cache(sql, lo.Values(data)...)
+	return StoreAndCache(db, sql, lo.Values(data)...)
 }
 
-func Store(sql string, values ...any) (sql.Result, error) {
-	return persistentDb.Exec(sql, values...)
-}
-
-func Cache(sql string, values ...any) (result sql.Result, err error) {
-	result, err = Store(sql, values...)
+func StoreAndCache(db *sql.DB, sql string, values ...any) (result sql.Result, err error) {
+	result, err = db.Exec(sql, values...)
 	if err != nil {
 		return
 	}
-	go cacheDb.Exec(sql, values...)
+	go CacheDb.Exec(sql, values...)
 	return
 }
 
-func Query(sql string, values ...any) (*sql.Rows, error) {
-	return persistentDb.Query(sql, values...)
-}
-
 func Get[T interface{}](sql string, values ...any) ([]T, error) {
-	sqlRows, err := cacheDb.Query(sql, values...)
+	sqlRows, err := CacheDb.Query(sql, values...)
 	if err != nil {
 		return nil, err
 	}
 
-	return MapResults[T](sqlRows)
+	if !sqlRows.Next() {
+		return nil, nil
+	}
+
+	return mapResults[T](sqlRows)
 }
 
-func MapResults[T interface{}](rows *sql.Rows) (results []T, err error) {
+func mapResults[T interface{}](rows *sql.Rows) (results []T, err error) {
 	defer rows.Close()
 	columns, err := rows.Columns()
 	if err != nil {
